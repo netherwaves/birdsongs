@@ -1,44 +1,59 @@
-#include "daisy_seed.h"
-#include "daisysp.h"
+#include <daisy_seed.h>
+#include <q/pitch/pitch_detector.hpp>
+#include <q/fx/signal_conditioner.hpp>
+#include <q/support/notes.hpp>
+#include <q/fx/biquad.hpp>
+#include <q/synth/sin.hpp>
 
-// Use the daisy namespace to prevent having to type
-// daisy:: before all libdaisy functions
+
+// namespaces
 using namespace daisy;
-using namespace daisysp;
+namespace q = cycfi::q;
+using namespace cycfi::q::literals;
 
-// Declare a DaisySeed object called hardware
 DaisySeed hardware;
 
-Oscillator osc;
+uint32_t sample_rate = 48000;
+
+q::frequency detected_f0 = q::frequency(0.0f);
+
+q::frequency lowest = q::notes::C[2];
+q::frequency highest = q::notes::C[5];
+
+q::signal_conditioner::config preprocessor_config;
+q::signal_conditioner         preprocessor{preprocessor_config,
+                                           lowest,
+                                           highest,
+                                           sample_rate};
+            
+q::pitch_detector pd{lowest, highest, sample_rate, q::decibel{0}};
+
+q::phase phase_accumulator = q::phase();
+q::phase f0_phase          = q::phase(detected_f0, sample_rate);
+
 
 void AudioCallback(AudioHandle::InterleavingInputBuffer in, AudioHandle::InterleavingOutputBuffer out, size_t size) {
-    float osc_out;
-    
     for (size_t i = 0; i < size; i += 2) {
-        osc_out = osc.Process();
+        float sig_l = in[i];
+        float sig_r = in[i+1];
 
-        out[i] = osc_out;
-        out[i+1] = osc_out;
+        float pd_sig = preprocessor(sig_l);
+
+        if (pd(pd_sig)) {
+            detected_f0 = q::frequency{pd.get_frequency()};
+            f0_phase    = q::phase(detected_f0, sample_rate);
+        }
+
+        out[i] = q::sin(phase_accumulator) * 0.5;
+        out[i+1] = sig_r;
+
+        phase_accumulator += f0_phase;
     }
 }
 
-int main(void)
-{
-    // Configure and Initialize the Daisy Seed
-    // These are separate to allow reconfiguration of any of the internal
-    // components before initialization.
+int main(void) {
     hardware.Configure();
     hardware.Init();
-    hardware.SetAudioBlockSize(4);
-
-    float samplerate = hardware.AudioSampleRate();
-
-    osc.Init(samplerate);
-    osc.SetAmp(0.1);
-    osc.SetFreq(1000);
-    osc.SetWaveform(osc.WAVE_SIN);
 
     hardware.StartAudio(AudioCallback);
-    
-    for (;;) {}
 }

@@ -6,3 +6,6 @@
 	path = lib/DaisySP
 	url = git@github.com:netherwaves/DaisySP.git
 	branch = master
+[submodule "lib/q"]
+	path = lib/q
+	url = git@github.com:netherwaves/q.git
