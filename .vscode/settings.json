@@ -1,3 +1,8 @@
 {
-    "autoHide.autoHideSideBar": false
+    "autoHide.autoHideSideBar": false,
+    "files.associations": {
+        "ff.h": "c",
+        "ffconf.h": "c",
+        "daisy_seed.h": "c"
+    }
 }
