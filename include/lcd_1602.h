@@ -23,8 +23,9 @@ namespace daisy {
 
       struct Config
       {
-          bool         cursor_on;
-          bool         cursor_blink;
+          bool         cursor_on = false;
+          bool         cursor_blink = false;
+          bool         display = true;
           dsy_gpio_pin rs, en, d4, d5, d6, d7;
       };
 
@@ -58,23 +59,44 @@ namespace daisy {
       */
       void Clear();
 
+      /** 
+      Sets the cursor to its original position (column 0, row 0).
+      */
       void Home();
+
+      void Display();
+      void NoDisplay();
+      void Blink();
+      void NoBlink();
+      void Cursor();
+      void NoCursor();
+      void ScrollDisplayLeft();
+      void ScrollDisplayRight();
+
+
 
     private:
       bool     cursor_on;
       bool     cursor_blink;
+      bool     display;
       dsy_gpio lcd_pin_rs;
       dsy_gpio lcd_pin_en;
       dsy_gpio lcd_data_pin[4]; // D4-D7
 
-      void Set4BitMode();
+      // command registers
+      
+      uint8_t display_command;
+      uint8_t function_set;
+      uint8_t entry_mode_set;
 
+      // write functions
+
+      void Set4BitMode();
       void WriteData(uint8_t);
       void WriteCommand(uint8_t);
       void Write(uint8_t, uint8_t);
   };
-
-}
+};
 
 
 #endif

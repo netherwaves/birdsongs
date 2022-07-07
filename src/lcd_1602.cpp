@@ -32,6 +32,12 @@ Based on: HD44780-Stm32HAL by Olivier Van den Eede (https://github.com/4ilo/HD44
 #define OPT_C 0x02 // Turn on cursor
 #define OPT_B 0x01 // Turn on cursor blink
 
+#define LCD_CURSOR_SHIFT 0x10
+#define LCD_DISPLAYMOVE 0x08
+#define LCD_CURSORMOVE 0x00
+#define LCD_MOVERIGHT 0x04
+#define LCD_MOVELEFT 0x00
+
 #define FUNCTION_SET 0x20
 #define OPT_DL 0x10 // Set interface data length
 #define OPT_N 0x08  // Set number of display lines
@@ -100,35 +106,26 @@ void Lcd1602::Init(const Config& config)
     Set4BitMode();
 
     // 3. function set
-    WriteCommand(FUNCTION_SET | OPT_N); // 4-bit mode, 2 lines
+    function_set = FUNCTION_SET | OPT_N;
+    WriteCommand(function_set); // 4-bit mode, 2 lines
 
     // 3.5 sure, why not!
     System::Delay(1);
 
     // 4. display control
-    WriteCommand(
-        DISPLAY_ON_OFF_CONTROL | OPT_D | (cursor_on ? OPT_C : 0)
-        | (cursor_blink ? OPT_B : 0));      // LCD on, cursor + blink settings
+    display_command = DISPLAY_ON_OFF_CONTROL |
+        (display ? OPT_D : 0) |
+        (cursor_on ? OPT_C : 0) |
+        (cursor_blink ? OPT_B : 0);
+
+    WriteCommand(display_command);      // LCD on, cursor + blink settings
     
     // 5. clear display
     Clear();
 
     // 6. entry mode
-    WriteCommand(ENTRY_MODE_SET | OPT_INC); // Increment cursor
-}
-
-
-void Lcd1602::Set4BitMode() {
-    dsy_gpio_write(&lcd_pin_rs, LCD_COMMAND_REG);
-
-    // instructions with appropriate timings...
-    Write(0x03, LCD_NIB);
-    System::DelayUs(4500);
-    Write(0x03, LCD_NIB);
-    System::DelayUs(4500);
-    Write(0x03, LCD_NIB);
-    System::DelayUs(150);
-    Write(0x02, LCD_NIB);
+    entry_mode_set = ENTRY_MODE_SET | OPT_INC;
+    WriteCommand(entry_mode_set); // Increment cursor
 }
 
 
@@ -176,7 +173,67 @@ void Lcd1602::Home() {
 }
 
 
+void Lcd1602::Display() {
+    display = true;
+    display_command |= OPT_D;
+    WriteCommand(display_command);
+}
+void Lcd1602::NoDisplay() {
+    display = false;
+    display_command &= ~OPT_D;
+    WriteCommand(display_command);
+}
+
+
+void Lcd1602::Blink() {
+    cursor_blink = true;
+    display_command |= OPT_B;
+    WriteCommand(display_command);
+}
+void Lcd1602::NoBlink() {
+    cursor_blink = false;
+    display_command &= ~OPT_B;
+    WriteCommand(display_command);
+}
+
+
+void Lcd1602::Cursor() {
+    cursor_on = true;
+    display_command |= OPT_C;
+    WriteCommand(display_command);
+}
+void Lcd1602::NoCursor() {
+    cursor_on = false;
+    display_command &= ~OPT_C;
+    WriteCommand(display_command);
+}
+
+
+void Lcd1602::ScrollDisplayLeft() {
+    WriteCommand(LCD_CURSOR_SHIFT | LCD_DISPLAYMOVE | LCD_MOVELEFT);
+}
+void Lcd1602::ScrollDisplayRight() {
+    WriteCommand(LCD_CURSOR_SHIFT | LCD_DISPLAYMOVE | LCD_MOVERIGHT);
+}
+
+
+
 // Private methods
+
+// Command sequence to set the screen in 4-bit mode (default)
+
+void Lcd1602::Set4BitMode() {
+    dsy_gpio_write(&lcd_pin_rs, LCD_COMMAND_REG);
+
+    // instructions with appropriate timings...
+    Write(0x03, LCD_NIB);
+    System::DelayUs(4500);
+    Write(0x03, LCD_NIB);
+    System::DelayUs(4500);
+    Write(0x03, LCD_NIB);
+    System::DelayUs(150);
+    Write(0x02, LCD_NIB);
+}
 
 
 // Write byte to command register
