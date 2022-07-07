@@ -7,19 +7,12 @@
 
 #include "lcd_1602.h"
 
-// #include "Lcd595.h"
-
 // namespaces
 using namespace daisy;
-
 DaisySeed hw;
 
 
-int main(void) {
-    // initialize hardware
-    hw.Configure();
-    hw.Init();
-
+void ConfigureLCDScreen() {
     // config LCD screen
     Lcd1602::Config lcd_config;
     // cursor
@@ -33,14 +26,24 @@ int main(void) {
     lcd_config.d6 = hw.GetPin(24);
     lcd_config.d7 = hw.GetPin(23);
 
+    // initialize
     Lcd1602 lcd;
     lcd.Init(lcd_config);
 
+    // print out
     lcd.SetCursor(0, 2);
     lcd.Print("TALK TO ME");
-
     lcd.SetCursor(1, 3);
     lcd.Print("--    --");
+}
+
+
+int main(void) {
+    // initialize hardware
+    hw.Configure();
+    hw.Init();
+
+    ConfigureLCDScreen();
 
     //setup_sampler(hw);
 }
