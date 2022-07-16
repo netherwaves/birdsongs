@@ -3,6 +3,9 @@
     "files.associations": {
         "ff.h": "c",
         "ffconf.h": "c",
-        "daisy_seed.h": "c"
+        "daisy_seed.h": "c",
+        "*.tcc": "cpp",
+        "functional": "cpp",
+        "iostream": "cpp"
     }
 }

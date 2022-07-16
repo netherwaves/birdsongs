@@ -51,3 +51,7 @@ void PitchDetector(AudioHandle::InterleavingInputBuffer in, AudioHandle::Interle
         phase_accumulator += f0_phase;
     }
 }
+
+void ConfigurePitchDetection() {
+    
+}
