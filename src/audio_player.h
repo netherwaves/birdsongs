@@ -9,11 +9,8 @@
 
 using namespace daisy;
 
-// defines
-#define BUFSIZE 4096
-
-
-// buffers
+// buffer
+#define BUFSIZE 4096U
 int16_t DSY_SDRAM_BSS ambiBuffer[BUFSIZE];
 int16_t DSY_SDRAM_BSS birdBuffer[BUFSIZE];
 
@@ -39,7 +36,7 @@ void ConfigureAudioPlayer() {
     birdSampler.Init(pathBirdcalls, birdBuffer, BUFSIZE, 1);
 }
 
-void LoopAudioPlayer() {
+void PrepareSamplers() {
     ambiSampler.Prepare();
     birdSampler.Prepare();
 }
